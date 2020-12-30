@@ -3,6 +3,11 @@ name = "drcov"
 version = "0.1.0"
 description = ""
 authors = ["Koh M. Nakagawa <tsunekou1019@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/kohnakagawa/drcovpy"
+repository = "https://github.com/kohnakagawa/drcovpy"
+include = ["LICENSE"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
