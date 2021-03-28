@@ -1,13 +1,13 @@
 # drcovpy
 
-This python package ...
-- saves a binary code coverage as [DrCov format](https://www.ayrx.me/drcov-file-format)
-- extracts a specific binary code coverage
+This simple python package:
+- Saves a binary code coverage as [DrCov format](https://www.ayrx.me/drcov-file-format)
+- Extracts a specific binary code coverage from a DrCov file
 
-# License
+## License
 
 [MIT License](LICENSE)
 
-# Author
+## Author
 
-Koh M. Nakagawa <tsunekou1019@gmail.com>
+Koh M. Nakagawa
