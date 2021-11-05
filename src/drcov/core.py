@@ -46,10 +46,15 @@ class DrCov:
         flavor = flavor_header.split(b":")[-1].strip()
         return version, flavor
 
+    @staticmethod
+    def _is_supported_module_table_ver(module_table_header: str) -> bool:
+        return b"version 2" in module_table_header or b"version 3" in module_table_header or b"version 4" in module_table_header
+
     def _read_module_table(self, bio: BinaryIO) -> None:
         module_table_header = bio.readline()
-        if not module_table_header.startswith(b"Module Table: version 2, count "):
+        if not self._is_supported_module_table_ver(module_table_header):
             raise InvalidModuleTableHeader(module_table_header.decode("utf-8"))
+
         n_modules = int(module_table_header.split(b" ")[-1])
         column_header = bio.readline()
         module_table_entry_cls = get_proper_module_table_entry_cls(column_header)
