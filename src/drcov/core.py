@@ -28,15 +28,21 @@ class DrCov:
     def import_from_bytes(self, data: bytes) -> None:
         self.import_from_binaryio(io.BytesIO(data))
 
+    @staticmethod
+    def _is_supported_drcov_version(version: int) -> bool:
+        return 2 <= version <= 3
+
     def import_from_binaryio(self, bio: BinaryIO) -> None:
-        _, _ = self._read_header(bio)
+        version, _ = self._read_header(bio)
+        if not self._is_supported_drcov_version(version):
+            raise InvalidHeader(f"DRCOV VERSION: {version} is not supported yet")
         self._read_module_table(bio)
         self._read_bb_table(cast(io.BytesIO, bio))
 
     @staticmethod
-    def _read_header(bio: BinaryIO) -> Tuple[bytes, bytes]:
+    def _read_header(bio: BinaryIO) -> Tuple[int, bytes]:
         version_header = bio.readline()
-        if not version_header.startswith(b"DRCOV VERSION: 2"):
+        if not version_header.startswith(b"DRCOV VERSION:"):
             raise InvalidHeader(version_header.decode("utf-8"))
         flavor_header = bio.readline()
         if not flavor_header.startswith(b"DRCOV FLAVOR: drcov"):
@@ -44,18 +50,31 @@ class DrCov:
 
         version = version_header.split(b":")[-1].strip()
         flavor = flavor_header.split(b":")[-1].strip()
-        return version, flavor
+        return int(version), flavor
 
     @staticmethod
-    def _is_supported_module_table_ver(module_table_header: str) -> bool:
-        return b"version 2" in module_table_header or b"version 3" in module_table_header or b"version 4" in module_table_header
+    def _is_supported_module_table_ver(mod_table_ver: int) -> bool:
+        return 2 <= mod_table_ver <= 5
+
+    @staticmethod
+    def _parse_module_table_header(module_table_header_line: bytes) -> Tuple[int, int]:
+        # Module Table: version {ver}, count {n_modules}
+        mobj = re.fullmatch(
+            r"Module Table: version (\d+), count (\d+)", module_table_header_line.decode("utf-8").strip()
+        )
+        if mobj is None:
+            raise InvalidModuleTableHeader(module_table_header_line.decode("utf-8"))
+        ver = int(mobj.group(1))
+        n_modules = int(mobj.group(2))
+        return ver, n_modules
 
     def _read_module_table(self, bio: BinaryIO) -> None:
-        module_table_header = bio.readline()
-        if not self._is_supported_module_table_ver(module_table_header):
-            raise InvalidModuleTableHeader(module_table_header.decode("utf-8"))
+        module_table_header_line = bio.readline()
+        ver, n_modules = self._parse_module_table_header(module_table_header_line)
 
-        n_modules = int(module_table_header.split(b" ")[-1])
+        if not self._is_supported_module_table_ver(ver):
+            raise InvalidModuleTableHeader(f"Module Table version {ver} is not supported")
+
         column_header = bio.readline()
         module_table_entry_cls = get_proper_module_table_entry_cls(column_header)
         for _ in range(n_modules):

@@ -54,6 +54,7 @@ def get_proper_module_table_entry_cls(column_header: bytes) -> Type[ModuleTableE
             ModuleTableEntryV2Win,
             ModuleTableEntryV3Win,
             ModuleTableEntryV4Win,
+            ModuleTableEntryV5Win,
             ModuleTableEntryV2Unix,
             ModuleTableEntryV3Unix,
             ModuleTableEntryV4Unix,
@@ -172,6 +173,33 @@ class ModuleTableEntryV4Win(ModuleTableEntry):
     column_header: ClassVar[
         bytes
     ] = b"Columns: id, containing_id, start, end, entry, offset, checksum, timestamp, path"
+
+    def to_coverage_info(self) -> CoverageInfo:
+        return CoverageInfo(
+            self.path,
+            self.start,
+            self.end - self.start,
+            [],
+        )
+
+
+@dataclass
+class ModuleTableEntryV5Win(ModuleTableEntry):
+    # DynamoRIO table version 5
+    # Columns: id, containing_id, start, end, entry, offset, preferred_base, checksum, timestamp, path
+    id: int = 0
+    containing_id: int = 0
+    start: int = 0
+    end: int = 0
+    entry: int = 0
+    offset: int = 0
+    preferred_base: int = 0
+    checksum: int = 0
+    timestamp: int = 0
+    path: str = ""
+    column_header: ClassVar[
+        bytes
+    ] = b"Columns: id, containing_id, start, end, entry, offset, preferred_base, checksum, timestamp, path"
 
     def to_coverage_info(self) -> CoverageInfo:
         return CoverageInfo(
